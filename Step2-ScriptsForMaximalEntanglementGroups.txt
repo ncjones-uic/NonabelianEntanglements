@@ -1,0 +1,294 @@
+/* STEP 2:  IT IS RECOMMENDED THAT YOU PASTE THE FOLLOWING CODE INTO A RUNNING MAGMA PROMPT IN BATCHES (FROM "START BATCH N" TO "END BATCH N"), AS INDICATED BELOW. */
+
+
+
+
+
+
+/* START BATCH 1 */
+
+MasterList := [];
+TheSet := {20, 21, 24, 26, 28, 30, 36};
+
+/* TheSet CONTAINS ALL LEVELS FROM THE GENUS ZERO CUMMINS-PAULI TABLE (EXCEPT 48) THAT ARE MAXIMAL WITH RESPECT TO DIVISIBILITY */
+
+The2Set := {11, 20, 21, 24, 25, 26, 27, 28, 30, 36};
+
+/* The2Set CONTAINS ALL THOSE LEVELS M (EXCEPT 48) FOR WHICH THERE EXISTS A GROUP G OF GL2-LEVEL 2*M THAT DOES NOT CONTAIN -I BUT FOR WHICH <G,-I> IS A GENUS ZERO GROUP, AND 2*M IS NOT IN TheSet.  SEE LEMMA ABOUT GL2-LEVEL OF G IS EITHER 1 OR 2 TIMES GL2-LEVEL OF <G,-I>. */
+
+for m in TheSet do
+	print "level equals";
+	print m;
+	Lm := CumminsPauliGL2Groups(m,0);
+	for pair in FactorizationsOfM(m) do
+		m1 := pair[1];
+		m2 := pair[2];
+		print "Factorization:";
+		print <m1,m2>;
+		TLm := ThinDownToNonAbelianEntanglements(Lm,m1,m2);
+		print "Number of NonAbelianEntanglements:";
+		print #TLm;
+		if #TLm ne 0 then
+			TTLm := ThinDownByMaximality(TLm,m);
+			FLm := FigureOutTheGroups(TTLm,m1,m2);
+			MasterList := MasterList cat FLm;
+		end if;
+		QLm := IdentifyAbelianGL2Quotients(Lm,m1,m2);
+		print "Number of pre-twist scenarios:";
+		print #QLm;
+		if #QLm ne 0 then
+			GLm := FormTheGlueings(QLm,m1,m2,0);
+			print "Number of Glueings:";
+			print #GLm;
+			if #GLm ne 0 then
+				MasterList := MasterList cat GLm;
+			end if;
+		end if;
+	end for;	
+end for;
+
+/* END BATCH 1 */
+
+
+
+
+
+
+/* START BATCH 2 */
+
+for m in The2Set do
+	M := 2*m;
+	print "level equals";
+	print M;
+	Lm := CumminsPauliGL2Groups(m,0);
+	ThinLm := ThinDownToContainsMinusIdentity(Lm,m);
+	LM := TwoTimesMComputation(ThinLm,m);
+	for pair in FactorizationsOfM(M) do
+		M1 := pair[1];
+		M2 := pair[2];
+		print "Factorization:";
+		print <M1,M2>;
+		TLM := ThinDownToNonAbelianEntanglements(LM,M1,M2);
+		print "Number of NonAbelianEntanglements:";
+		print #TLM;
+		if #TLM ne 0 then
+			TTLM := ThinDownByMaximality(TLM,M);
+			FLM := FigureOutTheGroups(TTLM,M1,M2);
+			MasterList := MasterList cat FLM;
+		end if;
+		QLM := IdentifyAbelianGL2Quotients(LM,M1,M2);
+		print "Number of pre-twist scenarios:";
+		print #QLM;
+		if #QLM ne 0 then
+			GLM := FormTheGlueings(QLM,M1,M2,0);
+			print "Number of Glueings:";
+			print #GLM;
+			if #GLM ne 0 then
+				MasterList := MasterList cat GLM;
+			end if;
+		end if;
+	end for;	
+end for;
+
+/* END BATCH 2 */
+
+
+
+
+
+
+/* START BATCH 3 */
+
+MMasterList := [];
+Levels := {22, 40, 42, 48, 50, 52, 54, 56, 60, 72};
+
+/* Levels IS SIMPLY THE SUBSET OF LEVELS IN TheSet join 2*The2Set THAT ARE MAXIMAL WITH RESPECT TO DIVISIBILITY */
+
+for m in Levels do
+	MastermList := [];
+	for n := 1 to #MasterList do
+		lev := MasterList[n,18];
+		if IsDivisibleBy(m,lev) then
+			d := Floor(m/lev);
+			G := FullPreImage(MasterList[n,1],lev,d);
+			Append(~MastermList,<G,G meet SL(2,Integers(m)),Genus(G,m),m>);
+		end if;
+	end for;
+	MastermList := NoConjugates(MastermList,m);
+	MastermList := ThinDownByMaximality(MastermList,m);
+	MMasterList := MMasterList cat MastermList;
+end for;
+
+SmallLevels := {};
+
+for n := 1 to #MMasterList do
+	SmallLevels := SmallLevels join { GL2Level(MMasterList[n,1],MMasterList[n,4]) };
+end for;
+
+MMMasterList := [];
+
+for m in SmallLevels do
+	MMastermList := [];
+	for n := 1 to #MMasterList do
+		if GL2Level(MMasterList[n,1],MMasterList[n,4]) eq m then
+			G := MatrixGroup<2, Integers(m) | Generators(MMasterList[n,1]) >;
+			Append(~MMastermList,<G,G meet SL(2,Integers(m)),Genus(G,m),m>);
+		end if;
+	end for;
+	MMastermList := NoConjugates(MMastermList,m);
+	MMastermList := ThinDownByMaximality(MMastermList,m);
+	MMMasterList := MMMasterList cat MMastermList;
+end for;
+
+/* MMMasterList IS THE SUBSET OF MAXIMAL GROUPS AMONG THOSE GENUS ZERO NONABELIAN ENTANGLEMENT GROUPS WHOSE GL2-LEVEL DIVIDES SOME LEVEL IN THE SET Levels ABOVE.  WHAT FOLLOWS ESTABLISHES THAT THERE ARE NO OTHER MAXIMAL GENUS ZERO NONABELIAN ENTANGLEMENT GROUPS, BY SHOWING THAT THERE ARE NO SUCH GROUPS WITH SL2-LEVEL 48 OR 96. */
+
+/* END BATCH 3 */
+
+
+
+
+
+
+/* START BATCH 4 */
+
+print "level equals";
+print 48;
+
+S48 := MatrixGroup<2, Integers(48) | [9,47,34,39], [35,6,12,35], [7,26,44,47], [47,33,30,17], [25,30,36,1]>;
+
+L48 := [<S48,S48,Genus(S48,48),48>];
+
+FigureOutTheGroups(L48,3,16)[1,4];
+
+/* S48 IS THE ONLY SUBGROUP OF SL(2,INTEGERS(48)), UP TO CONJUGATION IN GL(2,INTEGERS(48)), CONTAINING -I AND OF SL2-LEVEL 48 AND GENUS ZERO.  SINCE THE COMMON QUOTIENT IMPLICIT IN S48, VIEWED AS A FIBERED PRODUCT OF ITS MOD 3 AND MOD 16 PROJECTIONS, IS TRIVIAL, IT FOLLOWS THAT ANY SUBGROUP G48 OF GL(2,INTEGERS(48)) CONTAINING -I AND OF GENUS ZERO AND SL2-LEVEL 48 CANNOT BE A NONABELIAN ENTANGLEMENT GROUP. IT REMAINS TO SHOW THAT THERE ARE NO PRE-TWIST SCENARIOS OF SL2-LEVEL 48 AND NO NONABELIAN ENTANGLEMENT GROUPS OR PRETWIST SCENARIOS OF SL2-LEVEL 96 */
+
+f, GPerm := PermutationRepresentation(GL(2,Integers(48)));
+
+ListOfAmplifiers := [];
+for x in DoubleCosetRepresentatives(GPerm,f(S48),f(S48)) do
+	g := x@@f;
+	Amp := MatrixGroup<2, Integers(48) | Generators(S48), g>;
+	SAmp := Amp meet SL(2,Integers(48));
+	if #SAmp eq #S48 then
+		Append(~ListOfAmplifiers,g);
+	end if;
+end for;
+
+Level1Amps := [];
+for x := 1 to #ListOfAmplifiers do
+	g := ListOfAmplifiers[x];
+	G := MatrixGroup<2, Integers(48) | Generators(S48), g >;
+	if #G gt #S48 and #(G meet SL(2,Integers(48))) eq #S48 then    
+		isnew := true;
+		for y := 1 to #Level1Amps do
+			if IsConjugate(GL(2,Integers(48)),G,Level1Amps[y,1]) then   
+				isnew := false;
+				break y;
+			end if;
+		end for;
+		if isnew eq true then
+			Append(~Level1Amps,<G,G meet SL(2,Integers(48)), Genus(G,48),48>);   
+		end if;
+	end if;
+end for;
+
+Level2Amps := [];
+for x := 1 to #Level1Amps do
+	for y := 1 to #ListOfAmplifiers do
+		G := Level1Amps[x,1];
+		g := ListOfAmplifiers[y];
+		GAmp := MatrixGroup<2, Integers(48) | Generators(G), g >;
+		if #GAmp gt #G and #(GAmp meet SL(2,Integers(48))) eq #S48 then    
+			isnew := true;
+			for z := 1 to #Level2Amps do
+				if IsConjugate(GL(2,Integers(48)),GAmp,Level2Amps[z,1]) then   
+					isnew := false;
+					break y;
+				end if;
+			end for;
+			if isnew eq true then
+				Append(~Level2Amps,<GAmp,GAmp meet SL(2,Integers(48)), Genus(GAmp,48),48>);   
+			end if;
+		end if;
+	end for;
+end for;
+
+Level3Amps := [];
+for x := 1 to #Level2Amps do
+	for y := 1 to #ListOfAmplifiers do
+		G := Level2Amps[x,1];
+		g := ListOfAmplifiers[y];
+		GAmp := MatrixGroup<2, Integers(48) | Generators(G), g >;
+		if #GAmp gt #G and #(GAmp meet SL(2,Integers(48))) eq #S48 then    
+			isnew := true;
+			for z := 1 to #Level3Amps do
+				if IsConjugate(GL(2,Integers(48)),GAmp,Level3Amps[z,1]) then   
+					isnew := false;
+					break y;
+				end if;
+			end for;
+			if isnew eq true then
+				Append(~Level3Amps,<GAmp,GAmp meet SL(2,Integers(48)), Genus(GAmp,48),48>);   
+			end if;
+		end if;
+	end for;
+end for;
+
+Level3AmpsFullDet := [];
+for x := 1 to #Level3Amps do
+	if #DetOfGroup(Level3Amps[x,1],48) eq 16 then
+		Append(~Level3AmpsFullDet,Level3Amps[x]);		
+	end if;
+end for;
+
+Level3AmpsNotFullDet := [];
+for x := 1 to #Level3Amps do
+	if not #DetOfGroup(Level3Amps[x,1],48) eq 16 then
+		Append(~Level3AmpsNotFullDet,Level3Amps[x]);
+	end if;
+end for;
+
+
+Level4Amps := [];
+for x := 1 to #Level3AmpsNotFullDet do
+	for y := 1 to #ListOfAmplifiers do
+		G := Level3AmpsNotFullDet[x,1];
+		g := ListOfAmplifiers[y];
+		GAmp := MatrixGroup<2, Integers(48) | Generators(G), g >;
+		if #GAmp gt #G and #(GAmp meet SL(2,Integers(48))) eq #S48 then    
+			isnew := true;
+			for z := 1 to #Level4Amps do
+				if IsConjugate(GL(2,Integers(48)),GAmp,Level4Amps[z,1]) then   
+					isnew := false;
+					break y;
+				end if;
+			end for;
+			if isnew eq true then
+				Append(~Level4Amps,<GAmp,GAmp meet SL(2,Integers(48)), Genus(GAmp,48),48>);   
+			end if;
+		end if;
+	end for;
+end for;
+
+L48 := L48 cat Level1Amps cat Level2Amps cat Level3Amps cat Level4Amps;
+
+/* NOTE:  4 STEPS SUFFICES BECAUSE THE IMAGE OF DETERMINANT GROWS AT EACH STEP, AND (Z/48Z)^* IS A 2-GROUP OF ORDER 16 */
+
+QL48 := IdentifyAbelianGL2Quotients(L48,3,16);
+print "Number of pre-twist scenarios:";
+print #QL48;
+
+ThinL48 := ThinDownToContainsMinusIdentity(L48,48);
+L96 := TwoTimesMComputation(ThinL48,48);
+
+print "level equals";
+print 96;
+
+print "Number of GL2-subgroups of SL2-level 96 and genus zero:";
+print #L96;
+
+/* THIS COMPUTATION SHOWS THAT THERE IS NO GENUS ZERO SUBGROUP G96 OF GL(2,INTEGERS(96)) SATISFYING -I NOT IN G96 AND FOR WHICH THE SL2-LEVEL OF <-I,G96> EQUALS 48. */
+
+MMMasterList;
+
+/* END BATCH 4 */

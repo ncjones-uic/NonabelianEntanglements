@@ -1,0 +1,143 @@
+/* STEP 3:  IT IS RECOMMENDED THAT YOU PASTE THE FOLLOWING CODE INTO A RUNNING MAGMA PROMPT IN BATCHES (FROM "START BATCH N" TO "END BATCH N"), AS INDICATED BELOW. */
+
+
+
+
+
+
+/* START BATCH 1 */
+
+/* MAGMA SCRIPTS FOR FINDING MAXIMAL NON-COMMUTATOR-MAXIMAL SUBGROUPS OF G6 OF LEVEL DIVIDING 216 */
+
+G6 := MatrixGroup<2, Integers(6) | [5,5,0,1], [1,2,0,1], [2,3,3,5] >;
+L6 := ProperAdmissibleSubgroups(G6,6);
+NCL6 := NoConjugates(L6,6);
+NCML6 := ThinDownToNotCommutatorMaximalinG(NCL6,G6,6,1);
+TNCML6 := ThinDownByMaximality(NCML6,6);
+
+/* THIS RESULTS IN 3 SUBGROUPS OF LEVEL 6 THAT ARE MAXIMAL AMONG NON-COMMUTATOR MAXIMAL SUBGROUPS OF G6. */
+
+/* END BATCH 1 */
+
+
+
+
+
+
+/* START BATCH 2 */
+
+CML6 := ThinDownToCommutatorMaximalinG(NCL6,G6,6,1);
+CML6Tot := CML6 cat [<G6, G6 meet SL(2,Integers(6)), Genus(G6,6), 6>];
+
+/* NOW FOR EACH H IN CML6Tot WE VIEW H AT LEVEL 36 AND SEARCH FOR SUBGROUPS OF H THAT ARE MAXIMAL AMONG NON-COMMUTATOR MAXIMAL SUBGROUPS OF G6 */
+
+CML36 := [];
+NCML36 := [];
+for n := 1 to #CML6Tot do
+	H := CML6Tot[n,1];
+	L36H := LiftsOfG(H,6,6);
+	NCL36H := NoConjugates(L36H,36);
+	NCML36H := ThinDownToNotCommutatorMaximalinG(NCL36H,G6,6,6);
+	TNCML36H := ThinDownByMaximality(NCML36H,36);
+	NCML36 := NCML36 cat TNCML36H;
+	CML36H := ThinDownToCommutatorMaximalinG(NCL36H,G6,6,6);
+	CML36 := CML36 cat CML36H;
+	TNCML36 := ThinDownByMaximality(NCML36,36);
+end for;
+
+/* FOR H := G36, THE FULL PREIMAGE OF G6 INSIDE GL(2,Integers(36)), THIS GIVES RISE TO 7 MAXIMAL SUBGROUPS OF G6 OF LEVEL 36.  FOR THE OTHER TWO H IN CML6, YOU GET THESE SAME 7 GROUPS, INTERSECTED WITH H; THUS TNCML36 CONSISTS OF 7 GROUPS */
+
+/* END BATCH 2 */
+
+
+
+
+
+
+/* START BATCH 3 */
+
+G36 := FullPreImage(G6,6,6);
+CML36Tot := CML36 cat [<G36, G36 meet SL(2,Integers(36)), Genus(G36,36), 36>];
+
+for n := 1 to #CML36Tot do
+	H := CML36Tot[n,1];
+	L72H := LiftsOfG(H,36,2);
+	NCL72H := NoConjugates(L72H,72);
+	NCML72H := ThinDownToNotCommutatorMaximalinG(NCL72H,G36,36,2);
+	print #NCML72H;
+end for;
+
+/* FOR EACH H IN CML36Tot, WE FIND THAT #L72H = 1, SO THE ONLY POSSIBLE LIFT OF H TO LEVEL 72 IS JUST THE FULL PRE-IMAGE IN GL(2,Integers(72)) OF H, AND THUS NCML72H IS EMPTY. ONE FURTHER COMPUTES THAT, FOR EACH H IN CML36Tot, #H/(#H mod 12) = 81, AND SO H IS THE FULL PRE-IMAGE OF H MOD 12.  IT FOLLOWS THAT THE ONLY POSSIBLE LIFT OF H TO LEVEL 216 IS THE FULL PRE-IMAGE OF H IN GL(2,INTEGERS(216)), AND SO THE SET OF ALL SUBGROUPS OF G MOD 216 THAT ARE MAXIMAL AMONG THOSE THAT ARE NOT COMMUTATOR-MAXIMAL IN G MOD 216 IS LISTED BELOW IN "TNCML" */
+
+/* END BATCH 3 */
+
+
+
+
+
+/* START BATCH 4 */
+
+TNCML := TNCML6 cat TNCML36;
+
+TNCML;
+
+/* END BATCH 4 */
+
+
+
+
+
+/* START BATCH 5 */
+
+/* TO VERIFY THAT THERE ARE NO GENUS ZERO SUBGROUPS OF THE FORM G meet H WITH H IN S^{\max}(\ell): */
+
+G6 := MatrixGroup<2, Integers(6) | [5,5,0,1], [1,2,0,1], [2,3,3,5] >;
+
+/* THE FOLLOWING COMPUTATION SHOWS THAT, FOR EACH PRIME p WITH 3 < p < 14 AND EACH SUBGROUP H OF GL(2,ZHAT) WHOSE MOD p REDUCTION IS SMALLER THAN GL(2,Integers(p)), THE GENUS OF G6 meet H IS GREATER THAN ZERO */
+
+for p := 5 to 13 do
+	if IsPrime(p) then
+		print #CheckNextPrime(G6,p,0);
+	end if;
+end for;
+
+/* END BATCH 5 */
+
+
+
+
+
+/* START BATCH 6 */
+
+/* TO VERIFY DISPLAYED EQUATION ON PAGE 31 WITH EQUIVALENT CONDITIONS FOR MOD 6 IMAGE INSIDE G_{6,D}. */
+
+SerreAt6 := MatrixGroup<2, Integers(6) | [5,5,0,1], [1,2,0,1], [2,5,5,1] >;
+BorelAt3 := MatrixGroup<2, Integers(6) | [1,1,0,1], [5,0,0,1], [4,1,3,5]>;
+G6 := MatrixGroup<2, Integers(6) | [1,1,0,5], [5,1,3,2], [5,4,4,1] >;
+G61 := G6 meet BorelAt3;
+GoodList := [];
+for X in Subgroups(SerreAt6 meet BorelAt3) do
+	H := X`subgroup;
+	N1 := KernelCrossKernel(H,2,3)[1];
+	Hmod3 := MatrixGroup<2, Integers(3) | Generators(H) >;
+	Hmod2 := MatrixGroup<2, Integers(2) | Generators(H) >;
+	if #N1 eq 1 and IsEven(#Hmod2) and #Hmod3/#Hmod2 le 2 then
+		Append(~GoodList,<H, H meet SL(2,Integers(6)), Genus(H,6), 6> );
+	end if;
+end for;
+GoodList := NoConjugates(GoodList,6);
+for n := 1 to #GoodList do
+	print IsConjugateToSubgroup(GoodList[n,1],G61,6);
+end for;
+
+/* SUPPOSE G IS A SUBGROUP OF GL(2,Integers(6)) FOR WHICH THE RATIONAL POINTS OF X_G CORRESPOND TO ELLIPTIC CURVES E WHICH ADMIT A RATIONAL 3-ISOGENY, SATISFY Q(\SQRT{-3}) IS CONTAINED IN Q(E[2]), AND SATISFY THAT Q(E[3]) CONTAINS Q(E[2]) AS A SUBFIELD OVER WHICH IT HAS DEGREE AT MOST TWO.  THEN G MUST APPEAR AMONG THE 5 GROUPS IN GoodList ABOVE (UP TO CONJUGATION INSIDE GL(2,INTEGERS(3))), AND THE ABOVE COMPUTATION SHOWS THAT G MUST BE CONTAINED IN THE MOD 6 IMAGE OF G_{6,D} APPEARING IN THE "AN INFINITE FAMILY OF D6-ENTANGLEMENTS" SECTION OF THE PAPER. THE FOLLOWING ADDITONAL CODE MAY HELP THE READER TO JUSTIFY THIS. */
+
+for n := 1 to #GoodList do
+	H := GoodList[n,1];
+	Hmod2 := MatrixGroup<2, Integers(2) | Generators(H) >;
+	Hmod3 := MatrixGroup<2, Integers(3) | Generators(H) >;
+	print <#Hmod2, #Hmod3, #H>;
+end for;
+
+/* END BATCH 6 */
+
